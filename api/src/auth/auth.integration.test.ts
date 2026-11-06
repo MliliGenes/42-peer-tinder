@@ -178,6 +178,45 @@ test('real SQLite OAuth/session flow enforces state, eligibility, CSRF and logou
     assert.equal(completedBody.user.visible, true);
     assert.equal(completedBody.user.bio, 'Looking for a thoughtful teammate.');
 
+    const profileWithoutOrigin = await httpFetch(`${apiOrigin}/api/me`, {
+      method: 'PATCH',
+      headers: { cookie: firstCookieHeader, 'x-csrf-token': csrfToken, 'content-type': 'application/json' },
+      body: JSON.stringify({ visible: false }),
+    });
+    assert.equal(profileWithoutOrigin.status, 403);
+    const profileWithoutCsrf = await httpFetch(`${apiOrigin}/api/me`, {
+      method: 'PATCH',
+      headers: { cookie: firstCookieHeader, origin: 'http://localhost:5173', 'content-type': 'application/json' },
+      body: JSON.stringify({ visible: false }),
+    });
+    assert.equal(profileWithoutCsrf.status, 403);
+    const invalidProfile = await httpFetch(`${apiOrigin}/api/me`, {
+      method: 'PATCH',
+      headers: {
+        cookie: firstCookieHeader,
+        origin: 'http://localhost:5173',
+        'x-csrf-token': csrfToken,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ visible: 'yes' }),
+    });
+    assert.equal(invalidProfile.status, 400);
+    const updatedProfile = await httpFetch(`${apiOrigin}/api/me`, {
+      method: 'PATCH',
+      headers: {
+        cookie: firstCookieHeader,
+        origin: 'http://localhost:5173',
+        'x-csrf-token': csrfToken,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ bio: 'Updated by settings.', visible: false }),
+    });
+    assert.equal(updatedProfile.status, 200);
+    assert.deepEqual(await updatedProfile.json() as any, { bio: 'Updated by settings.', visible: false });
+    const profileResponse = await httpFetch(`${apiOrigin}/api/me`, { headers: { cookie: firstCookieHeader } });
+    assert.equal(profileResponse.status, 200);
+    assert.deepEqual(await profileResponse.json() as any, { bio: 'Updated by settings.', visible: false, onboarded: true });
+
     const intentHeaders = {
       cookie: firstCookieHeader,
       origin: 'http://localhost:5173',
@@ -277,8 +316,8 @@ test('real SQLite OAuth/session flow enforces state, eligibility, CSRF and logou
     const secondCookieHeader = `${setCookie(secondLogin.headers, 'peer_session')}; ${setCookie(secondLogin.headers, 'peer_csrf')}`;
     const prisma = app.get(PrismaService);
     const savedUser = await prisma.user.findUnique({ where: { fortyTwoId: '42' } });
-    assert.equal(savedUser?.bio, 'Looking for a thoughtful teammate.');
-    assert.equal(savedUser?.visible, true);
+    assert.equal(savedUser?.bio, 'Updated by settings.');
+    assert.equal(savedUser?.visible, false);
     assert.ok(savedUser?.onboardedAt);
     const secondSession = await prisma.session.findFirst({ where: { revokedAt: null } });
     assert.ok(secondSession);

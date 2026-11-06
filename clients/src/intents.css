@@ -1,4 +1,11 @@
 .intentions-card{margin-top:24px}
+.profile-settings-card{margin-top:24px}
+.profile-settings-form{display:grid;gap:16px;padding:20px;border:1px solid #e9e7df;border-radius:9px;background:#fbfaf5}
+.profile-settings-form textarea{width:100%;padding:11px;border:1px solid #dcdcd1;border-radius:6px;background:#fffef9;color:#292c26;font:inherit;resize:vertical}
+.profile-settings-form textarea::placeholder{color:#98998f}
+.profile-bio-count{justify-self:end;color:#8a8b82;font-size:10px}
+.profile-visibility-row{padding-top:2px}
+.visibility-pill.is-hidden{background:#f0eee7;color:#7d7d75}
 .intentions-heading{display:flex;align-items:center;justify-content:space-between;gap:18px}
 .intentions-heading h2{font-family:'Space Grotesk',sans-serif;font-size:26px;letter-spacing:-.7px;margin:8px 0 0}
 .intent-count{white-space:nowrap;padding:8px 11px;border:1px solid #dfe2d4;border-radius:999px;color:#657052;font-size:11px}

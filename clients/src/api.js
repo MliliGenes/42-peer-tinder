@@ -54,6 +54,36 @@ export function completeOnboarding({ bio, visible }) {
   return postJson('/api/me/onboarding', { bio, visible });
 }
 
+async function patchJson(path, payload) {
+  if (!csrfToken) throw new Error('Your session needs to be refreshed. Please try again.');
+  const response = await fetch(path, {
+    method: 'PATCH',
+    credentials: 'same-origin',
+    cache: 'no-store',
+    headers: {
+      'content-type': 'application/json',
+      'x-csrf-token': csrfToken,
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw await responseError(response);
+  return response.json();
+}
+
+export async function loadProfile() {
+  const response = await fetch('/api/me', {
+    credentials: 'same-origin',
+    cache: 'no-store',
+  });
+  if (response.status === 401) throw new Error('Your session needs to be refreshed. Please try again.');
+  if (!response.ok) throw await responseError(response);
+  return response.json();
+}
+
+export async function updateProfile(payload) {
+  return patchJson('/api/me', payload);
+}
+
 async function getJson(path) {
   const response = await fetch(path, {
     credentials: 'same-origin',
@@ -78,19 +108,7 @@ export async function createIntention(payload) {
 }
 
 export async function updateIntention(id, payload) {
-  if (!csrfToken) throw new Error('Your session needs to be refreshed. Please try again.');
-  const response = await fetch(`/api/me/intents/${encodeURIComponent(id)}`, {
-    method: 'PATCH',
-    credentials: 'same-origin',
-    cache: 'no-store',
-    headers: {
-      'content-type': 'application/json',
-      'x-csrf-token': csrfToken,
-    },
-    body: JSON.stringify(payload),
-  });
-  if (!response.ok) throw await responseError(response);
-  return response.json();
+  return patchJson(`/api/me/intents/${encodeURIComponent(id)}`, payload);
 }
 
 export async function logout(allSessions = false) {

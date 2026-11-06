@@ -9,11 +9,11 @@ Updated: 2026-11-06
 - React/Vite client, NestJS API, Prisma/SQLite persistence, and Docker Compose development setup.
 - Server-side 42 OAuth flow with state/browser binding, S256 PKCE, local sessions, account upsert, logout, and auth rate limits.
 - Private onboarding: a new account stays hidden until the user explicitly opts in. Fictional peers are only available in the development demo, not the authenticated account.
-- Persistent user bio and initial visibility state.
+- Persistent user bio and initial visibility state, with authenticated profile settings to edit the bio and toggle visibility after onboarding.
 - Persistent intentions in the signed-in account: create/list, pause, and renew; up to three active intentions, each lasting 14 days after confirmation. Intentions include purpose, schedule, time zone, optional goal, and optional project scope.
 - Basic shared project-name list derived from intentions. Project names are self-reported, not verified against 42.
 - Local SQLite migration for intentions applied in the Docker development database.
-- Latest checks passed in the Node 22 Docker environment: 7 client tests, 13 API tests, and production builds for client and API. The host Node installation is v12, below the documented Node 22 requirement.
+- Latest checks passed in the Node 22 Docker environment: 8 client tests, 13 API tests, and production builds for client and API. The host Node installation is v12, below the documented Node 22 requirement.
 
 ## Eligibility and provider follow-up
 

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { completeOnboarding, createIntention, loadIntentions, loadProjects, loadSession, logout, updateIntention } from './api.js';
+import { completeOnboarding, createIntention, loadIntentions, loadProfile, loadProjects, loadSession, logout, updateIntention, updateProfile } from './api.js';
 
 test('loads the authenticated session without caching and keeps CSRF in memory', async () => {
   const originalFetch = globalThis.fetch;
@@ -92,6 +92,39 @@ test('loads private intentions and projects without caching, and protects writes
     assert.deepEqual(JSON.parse(calls[3].options.body), { purpose: 'DISCUSS', schedule: 'ANY', timeZone: 'UTC' });
     assert.equal(calls[4].options.method, 'PATCH');
     assert.equal(calls[4].options.headers['x-csrf-token'], 'csrf-intentions');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('loads and updates profile settings with no-store and session CSRF', async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (path, options) => {
+    calls.push({ path, options });
+    if (path === '/api/auth/session') {
+      return Response.json({
+        authenticated: true,
+        csrfToken: 'csrf-profile',
+        user: { login: 'peer', onboarded: true, visible: false },
+      });
+    }
+    if (options.method === 'PATCH') return Response.json({ bio: 'Building with peers.', visible: false });
+    return Response.json({ bio: 'Building with peers.', visible: false, onboarded: true });
+  };
+  try {
+    await loadSession();
+    assert.equal((await loadProfile()).onboarded, true);
+    assert.deepEqual(await updateProfile({ bio: 'Building with peers.', visible: false }), {
+      bio: 'Building with peers.',
+      visible: false,
+    });
+    assert.equal(calls[1].options.cache, 'no-store');
+    assert.equal(calls[2].options.method, 'PATCH');
+    assert.equal(calls[2].options.cache, 'no-store');
+    assert.equal(calls[2].options.credentials, 'same-origin');
+    assert.equal(calls[2].options.headers['x-csrf-token'], 'csrf-profile');
+    assert.deepEqual(JSON.parse(calls[2].options.body), { bio: 'Building with peers.', visible: false });
   } finally {
     globalThis.fetch = originalFetch;
   }

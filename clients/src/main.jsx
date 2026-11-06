@@ -1,7 +1,7 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ArrowRight, ArrowUpRight, GitMerge, ShieldCheck, Terminal, Users } from 'lucide-react';
-import { completeOnboarding, createIntention, loadIntentions, loadProjects, loadSession, logout, updateIntention } from './api';
+import { completeOnboarding, createIntention, loadIntentions, loadProjects, loadSession, logout, updateIntention, updateProfile } from './api';
 import './style.css';
 import './intents.css';
 
@@ -154,6 +154,10 @@ function AccountHome({ session, onSignedOut }) {
   const [goal, setGoal] = useState('');
   const [savingIntent, setSavingIntent] = useState(false);
   const [updatingIntentId, setUpdatingIntentId] = useState(null);
+  const [profileBio, setProfileBio] = useState(session.user.bio || '');
+  const [profileVisible, setProfileVisible] = useState(Boolean(session.user.visible));
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState('');
   const user = session.user;
 
   useEffect(() => {
@@ -218,6 +222,22 @@ function AccountHome({ session, onSignedOut }) {
     }
   }
 
+  async function saveProfile(event) {
+    event.preventDefault();
+    if (savingProfile) return;
+    setSavingProfile(true);
+    setProfileError('');
+    try {
+      const result = await updateProfile({ bio: profileBio, visible: profileVisible });
+      setProfileBio(result.bio);
+      setProfileVisible(result.visible);
+    } catch (reason) {
+      setProfileError(reason.message || 'Could not save your profile settings. Please retry.');
+    } finally {
+      setSavingProfile(false);
+    }
+  }
+
   async function signOut() {
     setBusy(true);
     setError('');
@@ -253,13 +273,42 @@ function AccountHome({ session, onSignedOut }) {
         <div className="onboarding-user">
           <div className="profile-avatar">{user.avatarUrl ? <img src={user.avatarUrl} alt=""/> : initial}</div>
           <div><strong>{user.displayName}</strong><span>@{user.login} · 42 account</span></div>
-          <span className="visibility-pill"><i className="live-dot"/>{user.visible ? 'Visible to opted-in peers' : 'Hidden'}</span>
+          <span className="visibility-pill"><i className="live-dot"/>{profileVisible ? 'Visible to opted-in peers' : 'Hidden'}</span>
         </div>
         {user.bio && <p className="account-bio">{user.bio}</p>}
         <div className="account-empty">
           <GitMerge size={27}/>
           <div><strong>Your account is ready.</strong><p>Intentions are saved to your account. Peer discovery is coming next; no sample people are shown here.</p></div>
         </div>
+      </section>
+      <section className="account-card profile-settings-card" aria-labelledby="profile-settings-title">
+        <div className="intentions-heading">
+          <div><div className="eyebrow">PROFILE SETTINGS</div><h2 id="profile-settings-title">Your bio and visibility</h2></div>
+          <span className={`visibility-pill ${profileVisible ? '' : 'is-hidden'}`}><i className="live-dot"/>{profileVisible ? 'Visible to opted-in peers' : 'Hidden'}</span>
+        </div>
+        <p className="intent-description">You can change your bio at any time. Pausing visibility removes you from future discovery without deleting your account.</p>
+        {profileError && <div className="auth-alert" role="alert">{profileError}</div>}
+        <form className="profile-settings-form" onSubmit={saveProfile}>
+          <label className="intent-field" htmlFor="profile-settings-bio">
+            <span>BIO <span>OPTIONAL · MAX 500 CHARACTERS</span></span>
+            <textarea
+              id="profile-settings-bio"
+              value={profileBio}
+              maxLength={500}
+              onChange={(event) => setProfileBio(event.target.value)}
+              placeholder="What are you building, or hoping to find?"
+              rows={4}
+            />
+            <small className="profile-bio-count">{profileBio.length}/500</small>
+          </label>
+          <label className="consent-row profile-visibility-row">
+            <input type="checkbox" checked={profileVisible} onChange={(event) => setProfileVisible(event.target.checked)}/>
+            <span><strong>Discoverable by opted-in peers</strong><small>Turn this off whenever you need a break.</small></span>
+          </label>
+          <button className="solid intent-submit" type="submit" disabled={savingProfile}>
+            {savingProfile ? 'Saving…' : 'Save profile settings'} {!savingProfile && <ArrowRight size={16}/>}
+          </button>
+        </form>
       </section>
       <section className="account-card intentions-card" aria-labelledby="intentions-title">
         <div className="intentions-heading">
