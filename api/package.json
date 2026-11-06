@@ -1,0 +1,30 @@
+{
+  "name": "@peer/api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "nest build",
+    "start": "node dist/main.js",
+    "start:dev": "nest start --watch",
+    "start:dev:env": "node --env-file=../.env ../node_modules/@nestjs/cli/bin/nest.js start --watch",
+    "test": "npm run prisma:generate && npm run build && node --test dist/health.controller.test.js dist/auth/forty-two-provider.test.js dist/auth/oauth-attempts.service.test.js dist/auth/forty-two-eligibility.service.test.js dist/auth/sessions.service.test.js dist/auth/oauth-rate-limit.guard.test.js dist/auth/auth.integration.test.js",
+    "prisma:generate": "prisma generate --schema prisma/schema.prisma",
+    "prisma:migrate:dev": "prisma migrate dev --schema prisma/schema.prisma",
+    "prisma:migrate:deploy": "prisma migrate deploy --schema prisma/schema.prisma",
+    "prisma:migrate:deploy:env": "node --env-file=../.env ../node_modules/prisma/build/index.js migrate deploy --schema prisma/schema.prisma"
+  },
+  "dependencies": {
+    "@nestjs/common": "11.1.6",
+    "@nestjs/core": "11.1.6",
+    "@nestjs/platform-express": "11.1.6",
+    "@prisma/client": "6.19.0",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "11.0.10",
+    "@types/node": "22.18.6",
+    "prisma": "6.19.0",
+    "typescript": "5.9.3"
+  }
+}

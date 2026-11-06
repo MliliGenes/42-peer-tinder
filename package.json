@@ -1,19 +1,16 @@
 {
-  "name": "peer-prototype",
+  "name": "peer",
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "api",
+    "clients"
+  ],
   "scripts": {
-    "build": "vite build",
-    "dev": "vite",
-    "test": "node --test src/data.test.js"
-  },
-  "dependencies": {
-    "react": "19.2.6",
-    "react-dom": "19.2.6",
-    "lucide-react": "1.31.0"
-  },
-  "devDependencies": {
-    "vite": "8.0.13"
+    "build": "npm run build --workspace clients && npm run prisma:generate --workspace api && npm run build --workspace api",
+    "dev": "npm run dev --workspace clients",
+    "dev:api": "npm run start:dev:env --workspace api",
+    "test": "npm run test --workspace clients && npm run test --workspace api"
   }
 }

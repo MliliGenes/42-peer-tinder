@@ -1,3 +1,8 @@
 node_modules/
 dist/
 .openai/*.log
+.env
+.env.*
+!.env.example
+volumes/*
+!volumes/.gitkeep

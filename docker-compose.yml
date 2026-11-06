@@ -1,0 +1,48 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    working_dir: /workspace
+    command: sh -c "npm ci && npm run prisma:generate --workspace api && npm run prisma:migrate:deploy --workspace api && npm run start:dev --workspace api"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: file:/data/peer.db
+      FORTYTWO_CLIENT_ID: ${FORTYTWO_CLIENT_ID:-}
+      FORTYTWO_CLIENT_SECRET: ${FORTYTWO_CLIENT_SECRET:-}
+      FORTYTWO_REDIRECT_URI: ${FORTYTWO_REDIRECT_URI:-http://localhost:3000/api/auth/42/callback}
+      FORTYTWO_ELIGIBLE_CURSUS_IDS: ${FORTYTWO_ELIGIBLE_CURSUS_IDS:-}
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost:5173}
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/workspace
+      - api_node_modules:/workspace/node_modules
+      - ./volumes:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  clients:
+    image: node:22.13-alpine
+    working_dir: /workspace
+    command: sh -c "npm ci && npm run dev --workspace clients -- --host 0.0.0.0"
+    environment:
+      NODE_ENV: development
+      VITE_API_PROXY_TARGET: http://api:3000
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/workspace
+      - clients_node_modules:/workspace/node_modules
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  api_node_modules:
+  clients_node_modules:
